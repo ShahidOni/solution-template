@@ -61,9 +61,12 @@ public class Solution implements Runnable {
                 }
                 QueryProcessor queryProcessor = new QueryProcessor(query, tables);
                 queryProcessor.processQuery();
-                System.out.println();
+                 if (l != queryTestCase - 1) {
+                    System.out.println();
+                }
                 query.clear();
             }
+			System.out.println();
         }
     }
 }
@@ -94,6 +97,8 @@ class QueryProcessor {
     }
 
     private void doOperation() {
+
+        List<List<Integer>> listOfRows = new ArrayList<>();
         String fourthLineOfQuery = query.get(3);
         String[] splittedText = fourthLineOfQuery.split(" ");
 
@@ -117,41 +122,70 @@ class QueryProcessor {
         List<Integer> qualifiedColumnTable1 = new ArrayList<>();
         List<Integer> qualifiedColumnTable2 = new ArrayList<>();
         printColumn(table1, table2, qualifiedColumnTable1, qualifiedColumnTable2);
+
         for (int i = 0; i < table1.getNumberOfRows(); i++) {
             for (int j = 0; j < table2.getNumberOfRows(); j++) {
                 int columnIndex1 = table1.getColumnIndexMapping().get(firstColumnName);
                 int columnIndex2 = table2.getColumnIndexMapping().get(secondColumnName);
+                List<Integer> row = new ArrayList<>();
                 if (table1.getData()[i][columnIndex1] == table2.getData()[j][columnIndex2]) {
                     for (int k = 0; k < table1.getNumberOfColumn(); k++) {
                         if (qualifiedColumnTable1.contains(k)) {
-                            System.out.print(table1.getData()[i][k] + " ");
+                            row.add(table1.getData()[i][k]);
                         }
                     }
                     for (int k = 0; k < table2.getNumberOfColumn(); k++) {
                         if (qualifiedColumnTable2.contains(k)) {
-                            System.out.print(table2.getData()[j][k] + " ");
+                            row.add(table2.getData()[j][k]);
                         }
                     }
-                    System.out.println();
+                }
+                if (row.size() > 0) {
+                    listOfRows.add(row);
                 }
             }
         }
-    }
 
+        Collections.sort(listOfRows, new Comparator<List<Integer>>() {
+            @Override
+            public int compare(List<Integer> list1, List<Integer> list2) {
+                int iteratorLength = list1.size();
+                if (list1.size() > list2.size()) {
+                    iteratorLength = list1.size() - list2.size();
+                }
+                for (int i = 0; i < iteratorLength; i++) {
+                    if (list1.get(i) >= list2.get(i)) {
+                        return 1;
+                    } else if (list1.get(i) < list2.get(i)) {
+                        return -1;
+                    }
+                }
+                return 0;
+            }
+        });
+        for (List<Integer> list : listOfRows) {
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int a : list) {
+                stringBuilder.append(a + " ");
+            }
+            System.out.println(stringBuilder.toString().substring(0, stringBuilder.length() - 1));
+        }
+    }
 
     private void printColumn(Table table1, Table table2, List<Integer> qualifiedColumnTable1, List<Integer> qualifiedColumnTable2) {
         String firstLine = query.get(0);
         String[] tokens = firstLine.split(" ");
+        String str = "";
         if (tokens[1].equals("*")) {
             for (int i = 0; i < table1.getNumberOfColumn(); i++) {
-                System.out.print(table1.getColumnNames().get(i) + " ");
+                str += (table1.getColumnNames().get(i) + " ");
                 qualifiedColumnTable1.add(i);
             }
             for (int i = 0; i < table2.getNumberOfColumn(); i++) {
-                System.out.print(table2.getColumnNames().get(i) + " ");
+                str += (table2.getColumnNames().get(i) + " ");
                 qualifiedColumnTable2.add(i);
             }
-            System.out.println();
+            System.out.println(str.substring(0, str.length() - 1));
         } else {
             String firstLineWithoutSelect = firstLine.replace("SELECT ", "");
             String[] splitWithComma = firstLineWithoutSelect.split(", ");
@@ -168,9 +202,9 @@ class QueryProcessor {
                 } else {
                     populateQualifiedColumn(table2, qualifiedColumnTable2, columnName);
                 }
-                System.out.print(columnName + " ");
+                str += columnName + " ";
             }
-            System.out.println();
+            System.out.println(str.substring(0, str.length() - 1));
         }
     }
 
@@ -244,4 +278,3 @@ class Table {
         this.numberOfRows = numberOfRows;
     }
 }
-
